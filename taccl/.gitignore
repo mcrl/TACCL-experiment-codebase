@@ -1,0 +1,9 @@
+*.pyc
+*.ilp
+__pycache__
+*.egg-info
+*.pkl
+*.npy
+*.lp
+build/
+output/

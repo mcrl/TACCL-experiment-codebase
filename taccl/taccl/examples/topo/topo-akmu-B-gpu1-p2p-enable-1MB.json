@@ -1,0 +1,18 @@
+{
+  "name": "AKMU_B_GPU2_P2P_ENABLE_1MB",
+  "gpus_per_node": 1,
+  "nics_per_node": 1,
+  "alpha": 21.59,
+  "links": [
+    [0]
+  ],
+  "betas": [
+    [0]
+  ],
+  "invbws": [
+    [21.59]
+  ],
+  "remote_alpha": 24.88,
+  "remote_beta": 86.81,
+  "remote_invbw": 113.69
+}
