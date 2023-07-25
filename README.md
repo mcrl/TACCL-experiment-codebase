@@ -10,7 +10,7 @@
 │       ├── examples                #
 │           ├── topo                #   - TACCL input topologies for akmu
 │           ├── sketch              #   - TACCL input sketches for akmu
-├── taccl-exp-scripts               # Scripts for experiment 
+├── scripts               # Scripts for experiment 
 ├── taccl-exp-synthesis-plans       # Synthesized plans for akmu using TACCL
 │   ├── A                           #   - Synthesized plans for target A nodes (a0-3)
 │   ├── B                           #   - Synthesized plans for target B nodes (b4-7)                           
@@ -67,6 +67,6 @@ cd taccl && pip install .
 
 Our custom input files are provided under [topo/](taccl/taccl/examples/topo) and [sketch/](taccl/taccl/examples/sketch). 
 
-To generate synthesis plans using custom input files, we used [generate-synthesis.sh](taccl-exp-scripts/generate-synthesis.sh). Synthesized plans are in XML format and stored in [taccl-exp-synthesis-plans](taccl-exp-synthesis-plans/). You can test the synthesized plans using provided `run_single/two/multinode.sh`.
+To generate synthesis plans using custom input files, we used [generate-synthesis.sh](scripts/generate-synthesis.sh). Synthesized plans are in XML format and stored in [taccl-exp-synthesis-plans](taccl-exp-synthesis-plans/). You can test the synthesized plans using provided `run_single/two/multinode.sh`.
 
-To run a benchmark using the synthesized plans, we need to load them before launching the actual benchmark script. We provide a sample script in [hf0.sh](taccl-exp-scripts/hf0.sh). Simply, we add the MSCCL prefix at the beginning of the benchmark script. Benchmark script must be a Python script for our implementation. You can test the benchmark using provided [`hf.sh`](taccl-exp-scripts/hf.sh).
+To run a benchmark using the synthesized plans, we need to load them before launching the actual benchmark script. We provide a sample script in [hf0.sh](scripts/hf0.sh). Simply, we add the MSCCL prefix at the beginning of the benchmark script. Benchmark script must be a Python script for our implementation. You can test the benchmark using provided [`hf.sh`](scripts/hf.sh).
