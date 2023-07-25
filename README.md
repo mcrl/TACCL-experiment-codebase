@@ -10,7 +10,7 @@
 │       ├── examples                #
 │           ├── topo                #   - TACCL input topologies for akmu
 │           ├── sketch              #   - TACCL input sketches for akmu
-├── scripts               # Scripts for experiment 
+├── scripts                         # Scripts for experiment 
 ├── taccl-exp-synthesis-plans       # Synthesized plans for akmu using TACCL
 │   ├── A                           #   - Synthesized plans for target A nodes (a0-3)
 │   ├── B                           #   - Synthesized plans for target B nodes (b4-7)                           
