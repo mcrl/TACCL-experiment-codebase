@@ -16,7 +16,7 @@ INSTANCE=3 # We set this to 3 because < 3 gives suboptimal results
 # all reduce routine
 for machine in A B D
 do
-  for nnodes in n1 n2 n4
+  for nnodes in n1 n2 n3 n4 n5 n6 n7 n8
   do
     for gpu_per_node in gpu1 gpu2 gpu4
     do
@@ -55,7 +55,7 @@ for other_algo in allgather reducescatter
 do
   for machine in A B D
   do
-    for nnodes in n1 n2 n4
+    for nnodes in n1 n2 n3 n4 n5 n6 n7 n8
     do
       for gpu_per_node in gpu1 gpu2 gpu4
       do
@@ -106,7 +106,7 @@ for other_algo in broadcast reduce
 do
   for machine in A B D
   do
-    for nnodes in n1 n2 n4
+    for nnodes in n1 n2 n3 n4 n5 n6 n7 n8
     do
       for gpu_per_node in gpu1 gpu2 gpu4
       do
