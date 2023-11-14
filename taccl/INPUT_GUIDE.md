@@ -22,3 +22,6 @@ Guidelines for providing link profiles:
 
 ### Custom topologies
 In case the node topology is different from the topologies provided in the KnownTopologies class, you can set \<topo\> as "custom" and provide a "links", "betas", and "invbws" matrix instead of the list of values "node_betas_list" and "node_invbws_list" in the topology-file input.
+
+### Custom sketches
+TCCL: e.g., sk-akmu-n4-gpu2.json indicates 4 nodes with 2 GPUs each
