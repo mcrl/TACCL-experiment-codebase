@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Perform alpha-beta test for machines and save the results
+
 MPI_OPTIONS="-mca btl ^openib -mca pml ucx"
 
 OSU_LATENCY_RELATIVE=c/xccl/pt2pt/osu_xccl_latency

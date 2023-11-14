@@ -12,6 +12,22 @@ export GRB_LICENSE_FILE=/home/n0/yujin/gurobi.lic
 # taccl/taccl/cli/known_collectives.py
 
 INSTANCE=3 # We set this to 3 because < 3 gives suboptimal results
+CHUNKSIZE=1MB
+
+# mkdir
+for machine in A B D 
+do
+  for p2p in enable disable
+  do
+    for gdrlevel in SYS LOC
+    do
+      for gdrread in 0 1
+      do
+        mkdir -p /home/n1/junyeol/taccl-exp/taccl-exp-synthesis-plans/${machine}.${p2p}.${gdrlevel}.${gdrread}
+      done
+    done
+  done
+done
 
 # all reduce routine
 for machine in A B D
@@ -27,24 +43,30 @@ do
       
       for p2p in enable disable
       do
-        TOPO=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/topo/topo-akmu-${machine}-${gpu_per_node}-p2p-${p2p}-1MB.json
-        SK=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/sketch/sk-akmu-${nnodes}-${gpu_per_node}.json
-        XML_NAME=allreduce.${machine}.${nnodes}.${gpu_per_node}.i${INSTANCE}.xml
+        for gdrlevel in SYS LOC
+        do
+          for gdrread in 0 1
+          do
+            TOPO=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/topo/topo-akmu-${machine}-${gpu_per_node}-p2p-${p2p}-gdrlevel${gdrlevel}-gdrread-${gdrread}-${CHUNKSIZE}.json
+            SK=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/sketch/sk-akmu-${nnodes}-${gpu_per_node}.json
+            XML_NAME=allreduce.${machine}.${nnodes}.${gpu_per_node}.i${INSTANCE}.xml
 
-        echo $XML_NAME
+            echo $XML_NAME
 
-        # all reduce routine
-        ts=$(taccl solve custom Allgather --topology-file ${TOPO} --sketch-file ${SK} --directory /home/n1/junyeol/taccl-exp/taccl/output --force \
-          | grep "Wrote to" | grep -o '[0-9]\+' | tail -1)
-        # echo $ts
-        json=$(taccl combine custom Allgather --topology-file ${TOPO} --sketch-file ${SK} --ts ${ts} --directory /home/n1/junyeol/taccl-exp/taccl/output --force \
-          | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
-        # echo $json
-        xml=$(taccl ncclize ${json} --instances $INSTANCE \
-          | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
-        # echo $xml
-        mv $xml ${XML_NAME}
-        mv ${XML_NAME} /home/n1/junyeol/taccl-exp/taccl-exp-synthesis-plans/${machine}/${p2p}
+            # all reduce routine
+            ts=$(taccl solve custom Allgather --topology-file ${TOPO} --sketch-file ${SK} --directory /home/n1/junyeol/taccl-exp/taccl/output --force \
+              | grep "Wrote to" | grep -o '[0-9]\+' | tail -1)
+            # echo $ts
+            json=$(taccl combine custom Allgather --topology-file ${TOPO} --sketch-file ${SK} --ts ${ts} --directory /home/n1/junyeol/taccl-exp/taccl/output --force \
+              | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
+            # echo $json
+            xml=$(taccl ncclize ${json} --instances $INSTANCE \
+              | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
+            # echo $xml
+            mv $xml ${XML_NAME}
+            mv ${XML_NAME} /home/n1/junyeol/taccl-exp/taccl-exp-synthesis-plans/${machine}.${p2p}.${gdrlevel}.${gdrread}
+          done
+        done
       done
     done
   done
@@ -66,32 +88,38 @@ do
 
         for p2p in enable disable
         do
-          TOPO=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/topo/topo-akmu-${machine}-${gpu_per_node}-p2p-${p2p}-1MB.json
-          SK=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/sketch/sk-akmu-${nnodes}-${gpu_per_node}.json
-          XML_NAME=${other_algo}.${machine}.${nnodes}.${gpu_per_node}.i${INSTANCE}.xml
+          for gdrlevel in SYS LOC
+          do
+            for gdrread in 0 1
+            do
+              TOPO=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/topo/topo-akmu-${machine}-${gpu_per_node}-p2p-${p2p}-gdrlevel${gdrlevel}-gdrread-${gdrread}-${CHUNKSIZE}.json
+              SK=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/sketch/sk-akmu-${nnodes}-${gpu_per_node}.json
+              XML_NAME=${other_algo}.${machine}.${nnodes}.${gpu_per_node}.i${INSTANCE}.xml
 
-          echo $XML_NAME
+              echo $XML_NAME
 
-          CamelCaseAlgo=""
-          if [ "$other_algo" == "allgather" ]; then
-            CamelCaseAlgo="Allgather"
-          elif [ "$other_algo" == "broadcast" ]; then
-            CamelCaseAlgo="Broadcast"
-          elif [ "$other_algo" == "reducescatter" ]; then
-            CamelCaseAlgo="ReduceScatter"
-          elif [ "$other_algo" == "reduce" ]; then
-            CamelCaseAlgo="Reduce"
-          else
-            echo "Unknown algo"
-            exit 1
-          fi
+              CamelCaseAlgo=""
+              if [ "$other_algo" == "allgather" ]; then
+                CamelCaseAlgo="Allgather"
+              elif [ "$other_algo" == "broadcast" ]; then
+                CamelCaseAlgo="Broadcast"
+              elif [ "$other_algo" == "reducescatter" ]; then
+                CamelCaseAlgo="ReduceScatter"
+              elif [ "$other_algo" == "reduce" ]; then
+                CamelCaseAlgo="Reduce"
+              else
+                echo "Unknown algo"
+                exit 1
+              fi
 
-          json=$(taccl solve custom ${CamelCaseAlgo} --topology-file ${TOPO} --sketch-file ${SK} --directory /home/n1/junyeol/taccl-exp/taccl/output --force \
-            | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
-          xml=$(taccl ncclize ${json} --instances $INSTANCE \
-            | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
-          mv $xml ${XML_NAME}
-        mv ${XML_NAME} /home/n1/junyeol/taccl-exp/taccl-exp-synthesis-plans/${machine}/${p2p}
+              json=$(taccl solve custom ${CamelCaseAlgo} --topology-file ${TOPO} --sketch-file ${SK} --directory /home/n1/junyeol/taccl-exp/taccl/output --force \
+                | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
+              xml=$(taccl ncclize ${json} --instances $INSTANCE \
+                | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
+              mv $xml ${XML_NAME}
+              mv ${XML_NAME} /home/n1/junyeol/taccl-exp/taccl-exp-synthesis-plans/${machine}.${p2p}.${gdrlevel}.${gdrread}
+            done
+          done
         done
       done
     done
@@ -117,32 +145,38 @@ do
 
         for p2p in enable disable
         do
-          TOPO=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/topo/topo-akmu-${machine}-${gpu_per_node}-p2p-${p2p}-1MB.json
-          SK=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/sketch/sk-akmu-${nnodes}-${gpu_per_node}-nonsymmetric.json
-          XML_NAME=${other_algo}.${machine}.${nnodes}.${gpu_per_node}.i${INSTANCE}.xml
+          for gdrlevel in SYS LOC
+          do
+            for gdrread in 0 1
+            do
+              TOPO=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/topo/topo-akmu-${machine}-${gpu_per_node}-p2p-${p2p}-gdrlevel${gdrlevel}-gdrread-${gdrread}-${CHUNKSIZE}.json
+              SK=/home/n1/junyeol/taccl-exp/taccl/taccl/examples/sketch/sk-akmu-${nnodes}-${gpu_per_node}-nonsymmetric.json
+              XML_NAME=${other_algo}.${machine}.${nnodes}.${gpu_per_node}.i${INSTANCE}.xml
 
-          echo $XML_NAME
+              echo $XML_NAME
 
-          CamelCaseAlgo=""
-          if [ "$other_algo" == "allgather" ]; then
-            CamelCaseAlgo="Allgather"
-          elif [ "$other_algo" == "broadcast" ]; then
-            CamelCaseAlgo="Broadcast"
-          elif [ "$other_algo" == "reducescatter" ]; then
-            CamelCaseAlgo="ReduceScatter"
-          elif [ "$other_algo" == "reduce" ]; then
-            CamelCaseAlgo="Reduce"
-          else
-            echo "Unknown algo"
-            exit 1
-          fi
+              CamelCaseAlgo=""
+              if [ "$other_algo" == "allgather" ]; then
+                CamelCaseAlgo="Allgather"
+              elif [ "$other_algo" == "broadcast" ]; then
+                CamelCaseAlgo="Broadcast"
+              elif [ "$other_algo" == "reducescatter" ]; then
+                CamelCaseAlgo="ReduceScatter"
+              elif [ "$other_algo" == "reduce" ]; then
+                CamelCaseAlgo="Reduce"
+              else
+                echo "Unknown algo"
+                exit 1
+              fi
 
-          json=$(taccl solve custom ${CamelCaseAlgo} --topology-file ${TOPO} --sketch-file ${SK} --directory /home/n1/junyeol/taccl-exp/taccl/output --force \
-            | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
-          xml=$(taccl ncclize ${json} --instances $INSTANCE \
-            | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
-          mv $xml ${XML_NAME}
-          mv ${XML_NAME} /home/n1/junyeol/taccl-exp/taccl-exp-synthesis-plans/${machine}/${p2p}
+              json=$(taccl solve custom ${CamelCaseAlgo} --topology-file ${TOPO} --sketch-file ${SK} --directory /home/n1/junyeol/taccl-exp/taccl/output --force \
+                | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
+              xml=$(taccl ncclize ${json} --instances $INSTANCE \
+                | grep "Wrote to " | awk -F"Wrote to " '{print (NF>1)? $NF : ""}')
+              mv $xml ${XML_NAME}
+              mv ${XML_NAME} /home/n1/junyeol/taccl-exp/taccl-exp-synthesis-plans/${machine}.${p2p}.${gdrlevel}.${gdrread}
+            done
+          done
         done
       done
     done

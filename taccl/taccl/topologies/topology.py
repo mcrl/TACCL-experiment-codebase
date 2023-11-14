@@ -60,7 +60,6 @@ def _add_ext_switches(invbws, ngpus_per_node):
 
 def _make_switch(switches, node_beta, copies, ngpus_per_node):
     """ TCCL: Check switches """
-    print(f"TCCL: node_beta {node_beta}")
 
     new_switches = []
     num_switches = len(switches)
