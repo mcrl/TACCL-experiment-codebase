@@ -1,3 +1,9 @@
 **/build
 **/.vscode
 **/ws
+
+osu-branches/
+nccl-branches/
+cuda-sample-branches/
+
+pytorch
