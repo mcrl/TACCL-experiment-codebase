@@ -1,0 +1,24 @@
+{
+  "name": "akmu-A-GPU1-P2P-1-GDRLEVEL-SYS-GDRREAD-1-1MB",
+  "gpus_per_node": 1,
+  "nics_per_node": 1,
+  "alpha": 108.82,
+  "betas": [
+    [
+      0
+    ]
+  ],
+  "invbws": [
+    [
+      108.82
+    ]
+  ],
+  "links": [
+    [
+      0
+    ]
+  ],
+  "remote_alpha": 148.77,
+  "remote_beta": 110.03,
+  "remote_invbw": 258.8
+}
