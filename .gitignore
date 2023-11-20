@@ -7,3 +7,10 @@ nccl-branches/
 cuda-samples-branches/
 
 pytorch
+
+taccl-exp-synthesis-plans/
+
+*.npy
+*.lp
+*.pkl
+*.log
