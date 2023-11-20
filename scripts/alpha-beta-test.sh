@@ -24,11 +24,11 @@ do
                 inter_node_hosts=
 
                 if [ "$machine" == "A" ]; then
-                    intra_node_host="a0"
-                    inter_node_hosts="a0,a1"
+                    intra_node_host="a2"
+                    inter_node_hosts="a2,a3"
                 elif [ "$machine" == "B" ]; then
                     intra_node_host="b2"
-                    inter_node_hosts="b2,b4"
+                    inter_node_hosts="b2,b5"
                 elif [ "$machine" == "D" ]; then
                     intra_node_host="d0"
                     inter_node_hosts="d0,d2"
