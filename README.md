@@ -5,16 +5,12 @@
 .                                 
 ├── msccl                           # MSCCL runtime
 ├── sccl                            # MSCCL tools
-├── taccl                           # TACCL
-│   ├── taccl                       #
-│       ├── examples                #
-│           ├── topo                #   - TACCL input topologies for akmu
-│           ├── sketch              #   - TACCL input sketches for akmu
+├── taccl/taccl                     # TACCL
+│   └── examples                    # TACCL inputs
+│       └── topo                    #   - Topologies for akmu
+│       └── sketch                  #   - Sketches for akmu
 ├── scripts                         # Scripts for experiment 
 ├── taccl-exp-synthesis-plans       # Synthesized plans for akmu using TACCL
-│   ├── A                           #   - Synthesized plans for target A nodes (a0-3)
-│   ├── B                           #   - Synthesized plans for target B nodes (b4-7)                           
-│   ├── D                           #   - Synthesized plans for target D nodes (d0-3)
 ├── transformers                    # HuggingFace Transformers 
 ```
 
