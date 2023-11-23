@@ -46,6 +46,9 @@ class Algorithm(object):
             if len(output_addrs) > 0:
                 output_map[rank] = output_addrs
 
+        print(f"TCCL: input_map: {input_map}")
+        print(f"TCCL: output_map: {output_map}")
+
         # Concatenate collective and topology names plus instance arguments to create a name
         name = f'{collective.name}-{topology.name}-{instance}{suffix}'
 
@@ -78,10 +81,14 @@ class Algorithm(object):
         # Find which chunks will be sent from an address
         chunks_at_address = defaultdict(list)
         for chunk in collective.chunks():
+            print(f"TCCL: chunk: {chunk} chunk.address: {collective.address(chunk)}")
             chunks_at_address[collective.address(chunk)].append(chunk)
+        print(f"TCCL: chunks_at_address: {chunks_at_address}")
+
         # State records if a rank holds a chunk
         def idx(rank, chunk):
             return rank * collective.num_chunks + chunk
+
         state = [False] * (collective.num_nodes * collective.num_chunks)
         # Initialize state from precondition
         for rank in collective.ranks():
@@ -89,24 +96,59 @@ class Algorithm(object):
                 state[idx(rank, chunk)] = collective.precondition(rank, chunk)
         # Propagate state through sends of every step
         for step in self.steps:
+            # TCCL
+            print(f"TCCL: step.sends: {step.sends}")
+            #
+
             next_state = state.copy()
+
+            """ BUG REPORT FOR TACCL
+            A critical bug is found in the following code block. A step is a tuple consisting of (chunk, src, dst, t, l). However, the code block assumes that a step is a tuple consisting of (addr, src, dst, t, l). This bug causes the precondition check to fail.
+            """
+            # if len(step.sends[0]) == 5:
+            #     for addr, src, dst, _, _ in step.sends:
+            #         for chunk in chunks_at_address[addr]:
+            #             next_state[idx(dst, chunk)] |= state[idx(src, chunk)]
+            # elif len(step.sends[0]) == 6:
+            #     for addr, src, dst, _, _, _ in step.sends:
+            #         for chunk in chunks_at_address[addr]:
+            #             next_state[idx(dst, chunk)] |= state[idx(src, chunk)]
+            # else:
+            #     for addr, src, dst in step.sends:
+            #         for chunk in chunks_at_address[addr]:
+            #             next_state[idx(dst, chunk)] |= state[idx(src, chunk)]
+
+            """ TCCL
+            Fixed bug in the above BUG REPORT
+            """
             if len(step.sends[0]) == 5:
-                for addr, src, dst, _, _ in step.sends:
+                for c, src, dst, _, _ in step.sends:
+                    addr = collective.address(c)
                     for chunk in chunks_at_address[addr]:
                         next_state[idx(dst, chunk)] |= state[idx(src, chunk)]
             elif len(step.sends[0]) == 6:
-                for addr, src, dst, _, _, _ in step.sends:
+                for c, src, dst, _, _, _ in step.sends:
+                    addr = collective.address(c)
                     for chunk in chunks_at_address[addr]:
                         next_state[idx(dst, chunk)] |= state[idx(src, chunk)]
             else:
-                for addr, src, dst in step.sends:
+                for c, src, dst in step.sends:
+                    addr = collective.address(c)
                     for chunk in chunks_at_address[addr]:
                         next_state[idx(dst, chunk)] |= state[idx(src, chunk)]
+
             state = next_state
+        # TCCL
+        print(f"collective: {collective}\nstate: {state}")
+        #
+
         # Check that the postcondition holds
         for rank in collective.ranks():
             for chunk in collective.chunks():
-                # print(rank, chunk, state[idx(rank, chunk)])
+                print(f"collective.precondition(rank={rank}, chunk={chunk}): {collective.precondition(rank, chunk)}")
+                print(f"collective.postcondition(rank={rank}, chunk={chunk}): {collective.postcondition(rank, chunk)}")
+                print(f"idx(rank={rank}, chunk={chunk}): {idx(rank, chunk)}")
+                print(f"state[idx(rank, chunk)]: {state[idx(rank, chunk)]}")
                 if collective.postcondition(rank, chunk) and not state[idx(rank, chunk)]:
                     raise RuntimeError(f'rank {rank} does not get chunk {chunk} as required by the postcondition')
 
