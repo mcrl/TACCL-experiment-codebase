@@ -33,11 +33,19 @@ class TACCLScheduler(object):
         M = 10000000 # big-M for maximum self.time between sends
         ST = 500000 # self.time for unsent sends and unstarted starts
         SND = 1000000 # self.time for unsent sends and unstarted starts
-        opt.Params.Threads = 1
+
         opt.Params.IntegralityFocus = 1
         opt.Params.IntFeasTol = 1e-9
         opt.Params.FeasibilityTol = 1e-9
-        opt.Params.TimeLimit = 1800
+
+        # tccl
+        opt.Params.Threads = 32
+        opt.Params.TimeLimit = 1800 # 1800
+        opt.Params.LogToConsole = 0
+        opt.Params.LogFile = "gurobi.log"
+        # opt.Params.MIPGap = 1e-2
+        # opt.Params.IntFeasTol = 1e-2
+        # opt.Params.FeasibilityTol = 1e-2
 
         self.spsets = shortest_path_sets(self.topology, self.collective)
         num_local_nodes = R // self.topology.copies
@@ -444,6 +452,7 @@ class TACCLScheduler(object):
         instance_name = 'taccl_{}_{}'.format(self.topology.name, self.collective.name)
         start_time = time()
         opt = Model(instance_name)
+
         self._encode(opt, chunk_order, chunk_time, 
             switch_chunk_order_recv, switch_chunk_time_recv,
             switch_chunk_order_send, switch_chunk_time_send,
@@ -455,6 +464,10 @@ class TACCLScheduler(object):
         end_time = time()
         print("strict time (encode+solve)", end_time-start_time, flush=True)
 
+        # TCCL
+        opt.display()
+        print(f"TCCL: C: {self.collective.num_chunks}, R: {self.collective.num_nodes}, L: {self.topology.L}")
+        #
         if opt.status == GRB.INFEASIBLE:
             opt.computeIIS()
             opt.write("model.ilp")
@@ -467,16 +480,27 @@ class TACCLScheduler(object):
         send_dict = defaultdict(list)
         SCALE_TIME = 10
 
+
+        # TCCL
+        print(f"TCCL: self.start: {self.start}")
+        #
+
         model_str = ""
         other_model_str = ""
         for c in range(C):
             for r in range(R):
                 if self.start[c,r].X <= self.time.X + 0.005:
                     model_str += f'start[{c},{r}]={self.start[c,r].X}\n'
+        print(f"TCCL: model_str after (1): {model_str}")
+        print(f"TCCL: other_model_str after (1): {other_model_str}")
+
         recv_times = defaultdict(list)
         chunk_path = [defaultdict(list) for c in range(C)]
         for src in range(R):
             for r in self.topology.destinations(src):
+                # TCCL
+                print(f"TCCL: self.topology.destinations(src={src}) r={r}")
+                #
                 for l in range(L):
                     for c_np in chunk_order[r][src][l]:
                         c = int(c_np)
@@ -490,27 +514,42 @@ class TACCLScheduler(object):
                         c = int(c_np)
                         if c not in chunk_order[r][src][l]:
                             assert (c,src,r,l) not in self.is_sent_set_1
+
         for tval in sorted(recv_times.keys()):
             for strval in recv_times[tval]:
                 model_str += strval
+        # TCCL
+        print(f"TCCL: model_str after (2): {model_str}")
+
         for c in range(C):
             for tval in sorted(chunk_path[c].keys()):
                 for strval in chunk_path[c][tval]:
                     other_model_str += strval
+        # TCCL
+        print(f"TCCL: other_model_str after (2): {other_model_str}")
+
         for c in range(C):
             for o in range(c):
                 for r in range(R):
                     if (o,c,r) in self.is_together:
+                        print(f"TCCL: (o,c,r) = ({o},{c},{r}) in self.is_together")
                         if self.is_together[(o,c,r)].X >= 0.995:
                             model_str += f'({c},{o},{r})\n'
                     elif (o,c,r) in self.is_together_set_1:
                         model_str += f'({c},{o},{r}) set\n'
+        # TCCL
+        print(f"TCCL: model_str after (3): {model_str}")
+        
+        print(f"TCCL:\n\trecv_times: {recv_times}\n\tchunk_path: {chunk_path}\n\tsend_dict: {send_dict}\n")
+        #
 
         steps=[]
         send_times = sorted(send_dict.keys())
+        print(f"TCCL: send_times: {send_times}")
         i = 0
         while(i < len(send_times)):
             num_sends = [[[0 for _ in range(L)] for _ in range(R)] for _ in range(R)]
+            print(f"TCCL: num_sends after (1): {num_sends}")
             j = i + 1
             while j < len(send_times):
                 to_break = False
@@ -531,9 +570,11 @@ class TACCLScheduler(object):
             sends = []
             for k in range(i,j):
                 sends.extend(send_dict[send_times[k]])
+            print(f"TCCl: sends: {sends}")
             num_sends = [[[0 for _ in range(L)] for _ in range(R)] for _ in range(R)]
             for (c,src,r,_,l) in sends:
                 num_sends[r][src][l] = num_sends[r][src][l] + 1
+            print(f"TCCl: num_sends after (2): {num_sends}")
             rounds = 0
             for srcs, dsts, bw, l, name in self.topology.real_bandwidth_constraints():
                 util = 0
@@ -545,6 +586,8 @@ class TACCLScheduler(object):
             steps.append(Step(rounds, sorted(sends, key=lambda x: x[3])))
             i = j
 
+            print(f"TCCL: steps after (1): {steps}")
+        print(f"TCCL: send_dict after (1): {send_dict}")
         instance = Instance(
             steps=len(steps),
             extra_rounds=0,
@@ -554,4 +597,5 @@ class TACCLScheduler(object):
         from time import time
         timestamp = int(time())
         np.save(f'send_dict_{timestamp}.npy', send_dict)
+        print(f"TCCL: collective before make_implementation: {self.collective.__dict__}")
         return Algorithm.make_implementation(self.collective, self.topology, instance, steps, cont=True, suffix=f'-tacclsol-{soltype}-{timestamp}')

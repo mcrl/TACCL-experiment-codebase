@@ -45,6 +45,9 @@ class Collective:
         return rank in self._chunks[chunk].precondition
 
     def postcondition(self, rank, chunk):
+        # TCCL
+        print(f"TCCL: postcondition rank: {rank}, chunk: {chunk}, self._chunks[chunk].postcondition: {self._chunks[chunk].postcondition}")
+        #
         return rank in self._chunks[chunk].postcondition
 
     def address(self, chunk):
@@ -104,11 +107,13 @@ class Collective:
 def build_collective(name, num_nodes, num_chunks, precondition, postcondition, address = lambda c: c, trigger = lambda r, c: None):
     chunks = []
     ranks = []
+    print(f"TCCL: build_collective: {locals()}")
     for chunk in range(num_chunks):
         chunk_precondition = set(rank for rank in range(num_nodes) if precondition(rank, chunk))
         chunk_postcondition = set(rank for rank in range(num_nodes) if postcondition(rank, chunk))
         chunk_address = address(chunk)
         chunks.append(Chunk(chunk_precondition, chunk_postcondition, chunk_address))
+        print(f"TCCL: build_collective: chunk({chunk}) {chunks[-1]}")
     for rank in range(num_nodes):
         rank_precondition = set(chunk for chunk in range(num_chunks) if precondition(rank, chunk))
         rank_postcondition = set(chunk for chunk in range(num_chunks) if postcondition(rank, chunk))

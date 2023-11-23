@@ -40,8 +40,16 @@ class TACCLRevScheduler(object):
         M = 10000000 # big-M for maximum self.time between sends
         ST = 5000000 # self.time for unsent sends and unstarted starts
         SND = 10000000 # self.time for unsent sends and unstarted starts
-        opt.Params.Threads = 4
         opt.Params.IntegralityFocus = 1
+
+        # tccl
+        opt.Params.Threads = 32
+        opt.Params.TimeLimit = 1800 # 1800
+        opt.Params.LogToConsole = 0
+        opt.Params.LogFile = "gurobi.log"
+        # opt.Params.MIPGap = 1e-2
+        # opt.Params.IntFeasTol = 1e-2
+        # opt.Params.FeasibilityTol = 1e-2
 
         self.is_sent_set_1 = set()
         self.is_before_set_1 = set()    # Fixed ordering of chunks over a link

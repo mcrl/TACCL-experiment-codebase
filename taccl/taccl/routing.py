@@ -35,12 +35,19 @@ class TACCLRouting:
         opt.Params.MIPFocus = 1
         opt.Params.Method = 2
         opt.Params.NumericFocus = 3
-        opt.Params.Threads = 12
         opt.Params.MIPGap = 1e-9
-        opt.Params.TimeLimit = 1800
         opt.Params.IntegralityFocus = 1
         opt.Params.IntFeasTol = 1e-9
         opt.Params.FeasibilityTol = 1e-9
+
+        # tccl
+        opt.Params.Threads = 32
+        opt.Params.TimeLimit = 1800 # 1800
+        opt.Params.LogToConsole = 0
+        opt.Params.LogFile = "gurobi.log"
+        # opt.Params.MIPGap = 1e-2
+        # opt.Params.IntFeasTol = 1e-2
+        # opt.Params.FeasibilityTol = 1e-2
 
         mu = 0.01
 
@@ -362,6 +369,7 @@ class TACCLRouting:
 
         start_time = time()
         opt = Model(instance_name)
+
         self._encode(opt)
         opt.optimize()
         end_time = time()
